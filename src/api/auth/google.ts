@@ -7,7 +7,7 @@ import express from 'express'
 import passport from 'passport'
 import * as GoogleStrategy from 'passport-google-oauth'
 
-function makeGoogleRouter({ appName }: { appName: string }) {
+function makeGoogleAuthRouter({ appName }: { appName: string }) {
   const redirectURL = `/google/redirect/${appName}`
 
   passport.use(
