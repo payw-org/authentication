@@ -94,8 +94,12 @@ function makeGoogleAuthRouter({ appName }: { appName: string }) {
   return googleAuthRouter
 }
 
-const googleAuthRouter = makeGoogleRouter({
+const sayingGoogleAuthRouter = makeGoogleAuthRouter({
   appName: 'saying',
 })
+
+const googleAuthRouter = express.Router()
+
+googleAuthRouter.use(sayingGoogleAuthRouter)
 
 export { googleAuthRouter }
