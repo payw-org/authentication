@@ -4,9 +4,10 @@
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development tsnd -r tsconfig-paths/register --transpile-only src/main.ts",
     "build": "ttsc",
-    "start": "cross-env NODE_ENV=production node dist/main.js",
+    "dev": "cross-env NODE_ENV=development HOST=remote tsnd -r tsconfig-paths/register --transpile-only src/main.ts",
+    "start:local": "cross-env NODE_ENV=production HOST=local node dist/main.js",
+    "start": "cross-env NODE_ENV=production HOST=remote node dist/main.js",
     "introspect": "prisma introspect",
     "generate": "prisma generate",
     "migrate": "prisma migrate save --experimental && prisma migrate up --experimental"
