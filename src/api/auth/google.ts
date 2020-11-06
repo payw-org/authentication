@@ -14,7 +14,13 @@ const host =
       }`
     : `https://auth.payw.org`
 
-function makeGoogleAuthRouter({ appName }: { appName: string }) {
+function makeGoogleAuthRouter({
+  appName,
+  redirectServiceURL,
+}: {
+  appName: string
+  redirectServiceURL: string
+}) {
   const redirectPath = `/google/redirect/${appName}`
   const redirectURL = `${host}${redirectPath}`
 
@@ -48,7 +54,8 @@ function makeGoogleAuthRouter({ appName }: { appName: string }) {
 
         if (existingUser) {
           done(null, {
-            userID: existingUser.id,
+            refreshToken: existingUser.refreshToken,
+            accessToken: signAccessToken({ userID: existingUser.id }),
           })
           return
         }
@@ -64,7 +71,23 @@ function makeGoogleAuthRouter({ appName }: { appName: string }) {
           userID: createdUser.id,
         }
 
-        done(null, authData)
+        const refreshToken = signRefreshToken(authData)
+
+        await prisma.user.update({
+          data: {
+            refreshToken,
+          },
+          where: {
+            id: authData.userID,
+          },
+        })
+
+        const payload = {
+          refreshToken,
+          accessToken: signAccessToken(authData),
+        }
+
+        done(null, payload)
       }
     )
   )
@@ -85,15 +108,22 @@ function makeGoogleAuthRouter({ appName }: { appName: string }) {
       {
         session: false,
       },
-      async (err, authData: AuthData) => {
+      async (
+        err: Error,
+        payload: { refreshToken: string; accessToken: string }
+      ) => {
+        if (err) {
+          res.send(err.message)
+          return
+        }
         console.log('# Redirect path router activated')
-        console.log(authData)
 
-        const accessToken = signAccessToken(authData)
-        const refreshToken = await signRefreshToken(authData)
+        console.log(`accessToken: ${payload.accessToken}`)
+        console.log(`refreshToken: ${payload.refreshToken}`)
 
-        console.log(`accessToken: ${accessToken}`)
-        console.log(`refreshToken: ${refreshToken}`)
+        res.redirect(redirectServiceURL)
+
+        res.end()
       }
     )(req, res, next)
   })
@@ -103,10 +133,12 @@ function makeGoogleAuthRouter({ appName }: { appName: string }) {
 
 const sayingGoogleAuthRouter = makeGoogleAuthRouter({
   appName: 'saying',
+  redirectServiceURL: 'https://saying.today',
 })
 
 const whereLandGoogleAuthRouter = makeGoogleAuthRouter({
   appName: 'whereland',
+  redirectServiceURL: 'https://where.land',
 })
 
 const googleAuthRouter = express.Router()
