@@ -15,7 +15,8 @@ const host =
     : `https://auth.payw.org`
 
 function makeGoogleAuthRouter({ appName }: { appName: string }) {
-  const redirectURL = `${host}/google/redirect/${appName}`
+  const redirectPath = `/google/redirect/${appName}`
+  const redirectURL = `${host}${redirectPath}`
 
   passport.use(
     `google-${appName}`,
@@ -29,12 +30,15 @@ function makeGoogleAuthRouter({ appName }: { appName: string }) {
         const profile: GoogleStrategy.Profile = args[2]
         const done: GoogleStrategy.VerifyFunction = args[3]
 
-        console.log(profile)
-
-        if (!profile.emails) {
+        if (
+          !profile.emails ||
+          (profile.emails && profile.emails.length === 0)
+        ) {
           done(Error(`Email doesn't exist`))
           return
         }
+
+        console.log(profile.emails[0])
 
         const existingUser = await prisma.user.findOne({
           where: {
@@ -75,27 +79,21 @@ function makeGoogleAuthRouter({ appName }: { appName: string }) {
     })
   )
 
-  googleAuthRouter.get(redirectURL, (req, res, next) => {
+  googleAuthRouter.get(redirectPath, (req, res, next) => {
     passport.authenticate(
       `google-${appName}`,
       {
         session: false,
       },
       async (err, authData: AuthData) => {
+        console.log('# Redirect path router activated')
         console.log(authData)
 
         const accessToken = signAccessToken(authData)
         const refreshToken = await signRefreshToken(authData)
 
-        res.cookie('accessToken', accessToken, {
-          path: '/',
-          httpOnly: true,
-        })
-        res.cookie('refreshToken', refreshToken, {
-          path: '/',
-          httpOnly: true,
-        })
-        res.redirect('/')
+        console.log(`accessToken: ${accessToken}`)
+        console.log(`refreshToken: ${refreshToken}`)
       }
     )(req, res, next)
   })
