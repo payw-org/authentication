@@ -10,8 +10,11 @@ export const signAccessToken = (authData: AuthData) =>
     expiresIn: env.auth.jwt.accessTokenLifetime,
   })
 
-export const signRefreshToken = async (authData: AuthData) => {
-  const refreshToken = jwt.sign(authData, env.auth.jwt.secretKey)
+export const signRefreshToken = (authData: AuthData) =>
+  jwt.sign(authData, env.auth.jwt.secretKey)
+
+export const revokeRefreshToken = async (authData: AuthData) => {
+  const refreshToken = signRefreshToken(authData)
 
   await prisma.user.update({
     data: {
