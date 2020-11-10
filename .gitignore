@@ -6,3 +6,4 @@ migrations
 .DS_Store
 dist
 .cache
+public

@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {
-    "build": "ttsc",
+    "build": "ttsc && parcel build src/client/index.html -d public",
     "dev": "cross-env NODE_ENV=development HOST=local tsnd -r tsconfig-paths/register --transpile-only src/main.ts",
     "dev:remote": "cross-env NODE_ENV=development HOST=remote tsnd -r tsconfig-paths/register --transpile-only src/main.ts",
     "start:local": "cross-env NODE_ENV=production HOST=local node dist/main.js",
