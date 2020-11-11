@@ -5,7 +5,9 @@
   "license": "MIT",
   "scripts": {
     "build": "ttsc && parcel build src/client/index.html -d public",
-    "dev": "cross-env NODE_ENV=development HOST=local tsnd -r tsconfig-paths/register --transpile-only src/main.ts",
+    "dev:client": "parcel src/client/index.html",
+    "dev:server": "cross-env NODE_ENV=development HOST=local tsnd -r tsconfig-paths/register --transpile-only src/main.ts",
+    "dev": "run-p dev:server dev:client",
     "dev:remote": "cross-env NODE_ENV=development HOST=remote tsnd -r tsconfig-paths/register --transpile-only src/main.ts",
     "start:local": "cross-env NODE_ENV=production HOST=local node dist/main.js",
     "start": "cross-env NODE_ENV=production HOST=remote node dist/main.js",
@@ -36,6 +38,7 @@
     "@zerollup/ts-transform-paths": "^1.7.18",
     "chalk": "^4.1.0",
     "cross-env": "^7.0.2",
+    "npm-run-all": "^4.1.5",
     "parcel-bundler": "^1.12.4",
     "ts-node-dev": "^1.0.0",
     "tsconfig-paths": "^3.9.0",
