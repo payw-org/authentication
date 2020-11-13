@@ -41,6 +41,7 @@ a {
   opacity: 0;
   width: 6rem;
   height: auto;
+  will-change: transform;
 }
 
 .headline {
@@ -54,6 +55,7 @@ a {
 .headline span {
   opacity: 0;
   display: inline-block;
+  will-change: transform;
 }
 
 .google {
