@@ -110,7 +110,7 @@ function makeGoogleAuthRouter({
       },
       async (
         err: Error,
-        payload: { refreshToken: string; accessToken: string }
+        payload: { accessToken: string; refreshToken: string }
       ) => {
         if (err) {
           res.send(err.message)
@@ -118,10 +118,17 @@ function makeGoogleAuthRouter({
         }
         console.log('# Redirect path router activated')
 
+        const { accessToken, refreshToken } = payload
+
         console.log(`accessToken: ${payload.accessToken}`)
         console.log(`refreshToken: ${payload.refreshToken}`)
 
-        res.redirect(redirectServiceURL)
+        res.redirect(
+          queryString.stringifyUrl({
+            url: redirectServiceURL,
+            query: { accessToken, refreshToken },
+          })
+        )
 
         res.end()
       }

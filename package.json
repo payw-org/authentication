@@ -26,7 +26,8 @@
     "gsap": "^3.5.1",
     "jsonwebtoken": "^8.5.1",
     "passport": "^0.4.1",
-    "passport-google-oauth": "^2.0.0"
+    "passport-google-oauth": "^2.0.0",
+    "query-string": "^6.13.7"
   },
   "devDependencies": {
     "@prisma/cli": "^2.11.0",
