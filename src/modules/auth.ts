@@ -6,6 +6,11 @@ export type AuthData = {
   userID: number
 }
 
+export type DecodedAuthData = AuthData & {
+  iat: number
+  exp: number
+}
+
 const prisma = new PrismaClient()
 
 export const signAccessToken = (authData: AuthData) =>
