@@ -1,6 +1,6 @@
 import { env } from '@/env'
 import { PrismaClient } from '@prisma/client'
-import jwt from 'jsonwebtoken'
+import jwt, { JsonWebTokenError } from 'jsonwebtoken'
 
 export type AuthData = {
   userID: number
@@ -36,5 +36,21 @@ export const revokeRefreshToken = async (authData: AuthData) => {
   return refreshToken
 }
 
-export const verifyToken = (token: string) =>
-  jwt.verify(token, env.auth.jwt.secretKey) as AuthData
+export type JWTError = JsonWebTokenError & {
+  name: 'TokenExpiredError' | 'JsonWebTokenError' | 'NotBeforeError'
+}
+
+export const verifyToken = (
+  token: string
+): Promise<
+  [
+    jwt.JsonWebTokenError | jwt.NotBeforeError | jwt.TokenExpiredError | null,
+    DecodedAuthData | undefined
+  ]
+> => {
+  return new Promise((resolve) => {
+    jwt.verify(token, env.auth.jwt.secretKey, (err, decoded) => {
+      resolve([err, decoded as DecodedAuthData | undefined])
+    })
+  })
+}
