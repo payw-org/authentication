@@ -1,7 +1,3 @@
-export type AuthData = {
-  userID: number
-}
-
 declare global {
   namespace NodeJS {
     interface ProcessEnv {

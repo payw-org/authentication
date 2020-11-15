@@ -1,7 +1,10 @@
 import { env } from '@/env'
-import { AuthData } from '@/types'
 import { PrismaClient } from '@prisma/client'
 import jwt from 'jsonwebtoken'
+
+export type AuthData = {
+  userID: number
+}
 
 const prisma = new PrismaClient()
 

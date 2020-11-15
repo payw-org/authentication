@@ -1,11 +1,11 @@
 import { env } from '@/env'
-import { signAccessToken, signRefreshToken } from '@/modules/auth'
+import { AuthData, signAccessToken, signRefreshToken } from '@/modules/auth'
 import { prisma } from '@/modules/prisma'
-import { AuthData } from '@/types'
 import { currentTime } from '@/utils/time'
 import express from 'express'
 import passport from 'passport'
 import * as GoogleStrategy from 'passport-google-oauth'
+import queryString from 'query-string'
 
 const host =
   process.env.HOST === 'local'
