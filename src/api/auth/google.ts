@@ -119,8 +119,8 @@ function makeGoogleAuthRouter({
 
         const { accessToken, refreshToken } = payload
 
-        console.log(`accessToken: ${payload.accessToken}`)
-        console.log(`refreshToken: ${payload.refreshToken}`)
+        console.log(`accessToken: ${accessToken}`)
+        console.log(`refreshToken: ${refreshToken}`)
 
         res.setHeader('Authorization', JSON.stringify(payload))
 
