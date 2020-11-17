@@ -1,6 +1,5 @@
-import { signAccessToken, verifyToken } from '@/modules/auth'
+import { verifyToken } from '@/modules/auth'
 import { makeBody, makeHeader, validate } from '@/modules/express-validator'
-import { prisma } from '@/modules/prisma'
 import type { Request, Response } from 'express'
 import express from 'express'
 
@@ -19,14 +18,28 @@ verificationRouter.post(
   `/verify`,
   validate([body('accessToken').isString(), body('refreshToken').isString()]),
   async (req: Request, res: Response) => {
-    const {
-      accessToken,
-      refreshToken,
-    } = req.body as VerificationRequestHeaderAuthorization
+    const authorization = req.headers.authorization
+
+    if (!authorization || typeof authorization !== 'string') {
+      res.sendStatus(401)
+      return
+    }
+
+    const splittedAuth = authorization.split(' ')
+
+    const bearerPart = splittedAuth[0]
+    const accessToken = splittedAuth[1]
+
+    if (bearerPart !== 'Bearer' || !accessToken) {
+      res.sendStatus(401)
+      return
+    }
 
     const [accessTokenErr, authDataFromAccessToken] = await verifyToken(
       accessToken
     )
+
+    console.log(accessTokenErr)
 
     console.log(authDataFromAccessToken)
 
@@ -36,43 +49,45 @@ verificationRouter.post(
     }
 
     if (accessTokenErr.name !== 'TokenExpiredError') {
-      res.sendStatus(401)
+      res.status(401)
       return
     }
 
     // Access token expired
 
-    const [refreshTokenErr, authDataFromRefreshToken] = await verifyToken(
-      refreshToken
-    )
+    res.status(401).send({ shouldRefresh: true })
 
-    if (refreshTokenErr || !authDataFromRefreshToken) {
-      res.sendStatus(401)
-      return
-    }
+    // const [refreshTokenErr, authDataFromRefreshToken] = await verifyToken(
+    //   refreshToken
+    // )
 
-    const foundUser = await prisma.user.findOne({
-      where: {
-        id: authDataFromRefreshToken.userID,
-      },
-    })
+    // if (refreshTokenErr || !authDataFromRefreshToken) {
+    //   res.sendStatus(401)
+    //   return
+    // }
 
-    if (!foundUser || foundUser.refreshToken !== refreshToken) {
-      res.sendStatus(401)
-      return
-    }
+    // const foundUser = await prisma.user.findOne({
+    //   where: {
+    //     id: authDataFromRefreshToken.userID,
+    //   },
+    // })
 
-    console.log(authDataFromRefreshToken)
+    // if (!foundUser || foundUser.refreshToken !== refreshToken) {
+    //   res.sendStatus(401)
+    //   return
+    // }
 
-    const newAccessToken = signAccessToken({
-      userID: authDataFromRefreshToken.userID,
-    })
+    // console.log(authDataFromRefreshToken)
 
-    console.log(newAccessToken)
+    // const newAccessToken = signAccessToken({
+    //   userID: authDataFromRefreshToken.userID,
+    // })
 
-    res.json({
-      accessToken: newAccessToken,
-    })
+    // console.log(newAccessToken)
+
+    // res.json({
+    //   accessToken: newAccessToken,
+    // })
   }
 )
 
