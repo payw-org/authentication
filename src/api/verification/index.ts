@@ -49,7 +49,7 @@ verificationRouter.post(
     }
 
     if (accessTokenErr.name !== 'TokenExpiredError') {
-      res.status(401)
+      res.sendStatus(401)
       return
     }
 
