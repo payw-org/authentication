@@ -4,7 +4,7 @@ import type { Request, Response } from 'express'
 import express from 'express'
 
 const body = makeBody<VerificationRequestHeaderAuthorization>()
-const header = makeHeader<VerificationRequestHeaderAuthorization>()
+const header = makeHeader<{ authorization: string }>()
 
 const verificationRouter = express.Router()
 
@@ -16,7 +16,7 @@ type VerificationRequestHeaderAuthorization = {
 // TODO: validate from headers
 verificationRouter.post(
   `/verify`,
-  validate([body('accessToken').isString(), body('refreshToken').isString()]),
+  validate([header('authorization').isString()]),
   async (req: Request, res: Response) => {
     const authorization = req.headers.authorization
 
