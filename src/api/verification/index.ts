@@ -91,4 +91,10 @@ verificationRouter.post(
   }
 )
 
+verificationRouter.post(
+  `/refresh`,
+  validate([header('authorization').isString()]),
+  async (req: Request, res: Response) => {}
+)
+
 export { verificationRouter }
