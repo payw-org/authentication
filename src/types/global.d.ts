@@ -12,7 +12,7 @@ declare global {
 declare module 'express' {
   export interface Response {
     locals: {
-      authData: AuthData
+      authData?: AuthData
     }
   }
 }
