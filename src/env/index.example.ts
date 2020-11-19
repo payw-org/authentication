@@ -5,7 +5,8 @@ export const env = {
   },
   auth: {
     jwt: {
-      secretKey: '',
+      accessTokenSecret: '',
+      refreshTokenSecret: '',
       accessTokenLifetime: '',
     },
     google: {

@@ -14,12 +14,12 @@ export type DecodedAuthData = AuthData & {
 const prisma = new PrismaClient()
 
 export const signAccessToken = (authData: AuthData) =>
-  jwt.sign(authData, env.auth.jwt.secretKey, {
+  jwt.sign(authData, env.auth.jwt.accessTokenSecret, {
     expiresIn: env.auth.jwt.accessTokenLifetime,
   })
 
 export const signRefreshToken = (authData: AuthData) =>
-  jwt.sign(authData, env.auth.jwt.secretKey)
+  jwt.sign(authData, env.auth.jwt.refreshTokenSecret)
 
 export const revokeRefreshToken = async (authData: AuthData) => {
   const refreshToken = signRefreshToken(authData)
@@ -41,7 +41,8 @@ export type JWTError = JsonWebTokenError & {
 }
 
 export const verifyToken = (
-  token: string
+  token: string,
+  type: 'access' | 'refresh'
 ): Promise<
   [
     jwt.JsonWebTokenError | jwt.NotBeforeError | jwt.TokenExpiredError | null,
@@ -49,7 +50,12 @@ export const verifyToken = (
   ]
 > => {
   return new Promise((resolve) => {
-    jwt.verify(token, env.auth.jwt.secretKey, (err, decoded) => {
+    const secret =
+      type === 'access'
+        ? env.auth.jwt.accessTokenSecret
+        : env.auth.jwt.refreshTokenSecret
+
+    jwt.verify(token, secret, (err, decoded) => {
       resolve([err, decoded as DecodedAuthData | undefined])
     })
   })
