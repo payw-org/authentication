@@ -41,7 +41,7 @@ export type JWTError = JsonWebTokenError & {
 }
 
 export const verifyToken = (
-  token: string,
+  token: string | null | undefined,
   type: 'access' | 'refresh'
 ): Promise<
   [
@@ -55,7 +55,7 @@ export const verifyToken = (
         ? env.auth.jwt.accessTokenSecret
         : env.auth.jwt.refreshTokenSecret
 
-    jwt.verify(token, secret, (err, decoded) => {
+    jwt.verify(token ?? '', secret, (err, decoded) => {
       resolve([err, decoded as DecodedAuthData | undefined])
     })
   })
