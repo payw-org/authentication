@@ -1,5 +1,10 @@
 import { env } from '@/env'
-import { AuthData, signAccessToken, signRefreshToken } from '@/modules/auth'
+import {
+  AuthData,
+  signAccessToken,
+  signRefreshToken,
+  verifyToken,
+} from '@/modules/auth'
 import { prisma } from '@/modules/prisma'
 import { currentTime } from '@/utils/time'
 import express from 'express'
@@ -52,8 +57,25 @@ function makeGoogleAuthRouter({
         })
 
         if (existingUser) {
+          let refreshToken = existingUser.refreshToken
+
+          const [error] = await verifyToken(refreshToken, 'refresh')
+
+          if (error) {
+            refreshToken = signRefreshToken({ userID: existingUser.id })
+
+            await prisma.user.update({
+              data: {
+                refreshToken,
+              },
+              where: {
+                id: existingUser.id,
+              },
+            })
+          }
+
           done(null, {
-            refreshToken: existingUser.refreshToken,
+            refreshToken: refreshToken,
             accessToken: signAccessToken({ userID: existingUser.id }),
           })
           return
