@@ -1,3 +1,12 @@
-# PAYW Authentication
+# 🔐 PAYW Authentication
 
-https://auth.payw.org
+The PAYW Authentication server centralizes and simplifies the sign up/login process of every PAYW service.
+
+## Supported OAuth
+
+- Google
+
+## Available Services
+
+- [saying.today](https://saying.today)
+- where.land
