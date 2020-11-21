@@ -5,11 +5,13 @@ import {
   signRefreshToken,
   verifyToken,
 } from '@/modules/auth'
+import { isDev } from '@/modules/is-dev'
 import { prisma } from '@/modules/prisma'
 import { currentTime } from '@/utils/time'
 import express from 'express'
 import passport from 'passport'
 import * as GoogleStrategy from 'passport-google-oauth'
+import queryString from 'query-string'
 
 const host =
   process.env.HOST === 'local'
@@ -146,7 +148,15 @@ function makeGoogleAuthRouter({
 
         res.setHeader('Authorization', JSON.stringify(payload))
 
-        res.redirect(redirectServiceURL)
+        res.redirect(
+          queryString.stringifyUrl({
+            url: redirectServiceURL,
+            query: {
+              accessToken,
+              refreshToken,
+            },
+          })
+        )
 
         res.end()
       }
