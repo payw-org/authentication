@@ -157,13 +157,13 @@ function makeGoogleAuthRouter({
 }
 
 const sayingGoogleAuthRouter = makeGoogleAuthRouter({
-  appName: 'saying',
-  redirectServiceURL: 'https://saying.today',
+  appName: 'saying.today',
+  redirectServiceURL: isDev ? 'http://localhost:3000' : 'https://saying.today',
 })
 
 const whereLandGoogleAuthRouter = makeGoogleAuthRouter({
-  appName: 'whereland',
-  redirectServiceURL: 'https://where.land',
+  appName: 'where.land',
+  redirectServiceURL: isDev ? 'http://localhost:3000' : 'https://where.land',
 })
 
 const googleAuthRouter = express.Router()
