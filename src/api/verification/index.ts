@@ -1,6 +1,7 @@
 import { examineToken } from '@/middleware'
-import { verifyToken } from '@/modules/auth'
-import { makeBody, makeHeader, validate } from '@/modules/express-validator'
+import { signAccessToken, verifyToken } from '@/modules/auth'
+import { makeBody, makeHeader } from '@/modules/express-validator'
+import { prisma } from '@/modules/prisma'
 import type { Request, Response } from 'express'
 import express from 'express'
 
@@ -16,21 +17,17 @@ type VerificationRequestHeaderAuthorization = {
   refreshToken: string
 }
 
-// TODO: validate from headers
 verificationRouter.post(`/verify`, async (req: Request, res: Response) => {
   const accessToken = res.locals.token as string
 
-  const [accessTokenErr, authDataFromAccessToken] = await verifyToken(
-    accessToken,
-    'access'
-  )
+  const [accessTokenErr, authData] = await verifyToken(accessToken, 'access')
 
   console.log(accessTokenErr)
 
-  console.log(authDataFromAccessToken)
+  console.log(authData)
 
   if (accessTokenErr === null) {
-    res.json(authDataFromAccessToken)
+    res.json(authData)
     return
   }
 
@@ -41,45 +38,42 @@ verificationRouter.post(`/verify`, async (req: Request, res: Response) => {
 
   // Access token expired
 
-  res.status(401).send({ shouldRefresh: true })
-
-  // const [refreshTokenErr, authDataFromRefreshToken] = await verifyToken(
-  //   refreshToken
-  // )
-
-  // if (refreshTokenErr || !authDataFromRefreshToken) {
-  //   res.sendStatus(401)
-  //   return
-  // }
-
-  // const foundUser = await prisma.user.findOne({
-  //   where: {
-  //     id: authDataFromRefreshToken.userID,
-  //   },
-  // })
-
-  // if (!foundUser || foundUser.refreshToken !== refreshToken) {
-  //   res.sendStatus(401)
-  //   return
-  // }
-
-  // console.log(authDataFromRefreshToken)
-
-  // const newAccessToken = signAccessToken({
-  //   userID: authDataFromRefreshToken.userID,
-  // })
-
-  // console.log(newAccessToken)
-
-  // res.json({
-  //   accessToken: newAccessToken,
-  // })
+  res.status(401).send({ expired: true })
 })
 
-verificationRouter.post(
-  `/refresh`,
-  validate([header('authorization').isString()]),
-  async (req: Request, res: Response) => {}
-)
+verificationRouter.post(`/refresh`, async (req: Request, res: Response) => {
+  const refreshToken = res.locals.token as string
+
+  const [refreshTokenErr, authData] = await verifyToken(refreshToken, 'refresh')
+
+  if (refreshTokenErr || !authData) {
+    console.log('here')
+    res.sendStatus(401)
+    return
+  }
+
+  const user = await prisma.user.findOne({
+    where: {
+      id: authData.userID,
+    },
+  })
+
+  if (!user || user.refreshToken !== refreshToken) {
+    res.sendStatus(401)
+    return
+  }
+
+  console.log(authData)
+
+  const newAccessToken = signAccessToken({
+    userID: authData.userID,
+  })
+
+  console.log(`newAccessToken: ${newAccessToken}`)
+
+  res.json({
+    accessToken: newAccessToken,
+  })
+})
 
 export { verificationRouter }
