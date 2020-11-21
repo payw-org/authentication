@@ -40,22 +40,40 @@ export type JWTError = JsonWebTokenError & {
   name: 'TokenExpiredError' | 'JsonWebTokenError' | 'NotBeforeError'
 }
 
+/**
+ * Validates refresh token itself and also checks DB.
+ */
 export const verifyToken = (
   token: string | null | undefined,
   type: 'access' | 'refresh'
-): Promise<
-  [
-    jwt.JsonWebTokenError | jwt.NotBeforeError | jwt.TokenExpiredError | null,
-    DecodedAuthData | undefined
-  ]
-> => {
+): Promise<[Error | null, DecodedAuthData | undefined]> => {
   return new Promise((resolve) => {
     const secret =
       type === 'access'
         ? env.auth.jwt.accessTokenSecret
         : env.auth.jwt.refreshTokenSecret
 
-    jwt.verify(token ?? '', secret, (err, decoded) => {
+    jwt.verify(token ?? '', secret, async (err, decoded) => {
+      const authData = decoded as DecodedAuthData | undefined
+
+      // Check DB and compare the refresh token
+      if (authData?.userID && type === 'refresh') {
+        const user = await prisma.user.findOne({
+          where: {
+            id: authData.userID,
+          },
+        })
+
+        if (user?.refreshToken !== token) {
+          const err = new Error('Revoked Refresh Token')
+
+          err.name = 'RevokedRefreshToken'
+
+          resolve([err, undefined])
+          return
+        }
+      }
+
       resolve([err, decoded as DecodedAuthData | undefined])
     })
   })

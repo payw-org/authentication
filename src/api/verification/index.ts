@@ -47,15 +47,19 @@ verificationRouter.post(`/refresh`, async (req: Request, res: Response) => {
   const [refreshTokenErr, authData] = await verifyToken(refreshToken, 'refresh')
 
   if (refreshTokenErr || !authData) {
-    console.log('here')
     res.sendStatus(401)
     return
   }
 
-  const user = await prisma.user.findOne({
-    where: {
-      id: authData.userID,
-    },
+  const newAccessToken = signAccessToken({
+    userID: authData.userID,
+  })
+
+  console.log(`newAccessToken: ${newAccessToken}`)
+
+  res.json({
+    accessToken: newAccessToken,
+  })
   })
 
   if (!user || user.refreshToken !== refreshToken) {
