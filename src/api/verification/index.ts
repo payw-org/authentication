@@ -1,7 +1,11 @@
 import { examineToken } from '@/middleware'
-import { signAccessToken, verifyToken } from '@/modules/auth'
+import {
+  revokeRefreshToken,
+  signAccessToken,
+  verifyToken,
+} from '@/modules/auth'
+import { createHandler } from '@/modules/express-helper'
 import { makeBody, makeHeader } from '@/modules/express-validator'
-import { prisma } from '@/modules/prisma'
 import type { Request, Response } from 'express'
 import express from 'express'
 
@@ -60,24 +64,25 @@ verificationRouter.post(`/refresh`, async (req: Request, res: Response) => {
   res.json({
     accessToken: newAccessToken,
   })
-  })
-
-  if (!user || user.refreshToken !== refreshToken) {
-    res.sendStatus(401)
-    return
-  }
-
-  console.log(authData)
-
-  const newAccessToken = signAccessToken({
-    userID: authData.userID,
-  })
-
-  console.log(`newAccessToken: ${newAccessToken}`)
-
-  res.json({
-    accessToken: newAccessToken,
-  })
 })
+
+verificationRouter.post(
+  `/revoke`,
+  createHandler(async ({ res }) => {
+    const refreshToken = res.locals.token as string
+    const [tokenErr, authData] = await verifyToken(refreshToken, 'refresh')
+
+    if (tokenErr || !authData) {
+      res.sendStatus(401)
+      return
+    }
+
+    const newRefreshToken = await revokeRefreshToken({
+      userID: authData.userID,
+    })
+
+    res.json({ refreshToken: newRefreshToken })
+  })
+)
 
 export { verificationRouter }
