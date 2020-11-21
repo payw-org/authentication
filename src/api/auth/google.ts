@@ -19,17 +19,17 @@ const host =
     : `https://auth.payw.org`
 
 function makeGoogleAuthRouter({
-  appName,
+  serviceName,
   redirectServiceURL,
 }: {
-  appName: string
+  serviceName: string
   redirectServiceURL: string
 }) {
-  const redirectPath = `/google/redirect/${appName}`
+  const redirectPath = `/google/redirect/${serviceName}`
   const redirectURL = `${host}${redirectPath}`
 
   passport.use(
-    `google-${appName}`,
+    `google-${serviceName}`,
     new GoogleStrategy.OAuth2Strategy(
       {
         clientID: env.auth.google.clientID,
@@ -116,8 +116,8 @@ function makeGoogleAuthRouter({
   const googleAuthRouter = express.Router()
 
   googleAuthRouter.get(
-    `/google/sign-up/${appName}`,
-    passport.authenticate(`google-${appName}`, {
+    `/google/sign-up/${serviceName}`,
+    passport.authenticate(`google-${serviceName}`, {
       scope: ['profile', 'email'],
       session: false,
     })
@@ -125,7 +125,7 @@ function makeGoogleAuthRouter({
 
   googleAuthRouter.get(redirectPath, (req, res, next) => {
     passport.authenticate(
-      `google-${appName}`,
+      `google-${serviceName}`,
       {
         session: false,
       },
@@ -157,12 +157,12 @@ function makeGoogleAuthRouter({
 }
 
 const sayingGoogleAuthRouter = makeGoogleAuthRouter({
-  appName: 'saying.today',
+  serviceName: 'saying.today',
   redirectServiceURL: isDev ? 'http://localhost:3000' : 'https://saying.today',
 })
 
 const whereLandGoogleAuthRouter = makeGoogleAuthRouter({
-  appName: 'where.land',
+  serviceName: 'where.land',
   redirectServiceURL: isDev ? 'http://localhost:3000' : 'https://where.land',
 })
 
