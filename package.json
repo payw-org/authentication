@@ -14,10 +14,10 @@
     "introspect": "prisma introspect",
     "generate": "prisma generate",
     "migrate": "prisma migrate save --experimental && prisma migrate up --experimental",
-    "pm2:start": "pm2 start npm --name 'PAYW_auth' -- run start",
-    "pm2:restart": "if pm2 show PAYW_auth ; then pm2 restart PAYW_auth ; else echo 'No pm2 instance for PAYW_auth' ; fi",
-    "pm2:stop": "if pm2 show PAYW_auth ; then pm2 stop PAYW_auth ; else echo 'No pm2 instance for PAYW_auth' ; fi",
-    "pm2:delete": "if pm2 show PAYW_auth ; then pm2 delete PAYW_auth ; else echo 'No pm2 instance for PAYW_auth' ; fi",
+    "pm2:start": "pm2 start npm --name 'payw-auth' -- run start",
+    "pm2:restart": "if pm2 show payw-auth ; then pm2 restart payw-auth ; else echo 'No pm2 instance for payw-auth' ; fi",
+    "pm2:stop": "if pm2 show payw-auth ; then pm2 stop payw-auth ; else echo 'No pm2 instance for payw-auth' ; fi",
+    "pm2:delete": "if pm2 show payw-auth ; then pm2 delete payw-auth ; else echo 'No pm2 instance for payw-auth' ; fi",
     "pm2:reboot": "npm ci && npm run build && npm run pm2:stop && npm run pm2:delete && npm run pm2:start"
   },
   "dependencies": {
