@@ -1,0 +1,14 @@
+{
+  "name": "@payw/auth",
+  "version": "0.1.0",
+  "description": "PAYW Authentication",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "PAYW",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.0"
+  }
+}
