@@ -1,5 +1,5 @@
 {
-  "name": "@payw/auth",
+  "name": "authentication",
   "description": "The auth server and modules for PAYW software",
   "version": "0.1.0",
   "license": "MIT",
