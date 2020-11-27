@@ -2,13 +2,19 @@ import { env } from '@/env'
 import appRoot from 'app-root-path'
 import bodyParser from 'body-parser'
 import chalk from 'chalk'
+import cors from 'cors'
 import express from 'express'
 import { apiRouter } from './api'
+import { corsAllowedList } from './constants'
 import { prisma } from './modules/prisma'
 
 const dev = process.env.NODE_ENV === 'development'
 
 const app = express()
+
+const corsHandler = dev ? cors() : cors({ origin: corsAllowedList })
+
+app.use(corsHandler)
 
 app.use(bodyParser.json())
 app.use(express.static(appRoot.resolve('public')))
