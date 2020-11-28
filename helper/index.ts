@@ -1,10 +1,11 @@
 import axios, { AxiosError } from 'axios'
 import Cookies from 'cookies'
+import { addMinutes } from 'date-fns'
 import { IncomingMessage, ServerResponse } from 'http'
 
 const host = 'https://auth.payw.org'
 
-export const cookieNames = {
+const cookieNames = {
   accessToken: 'PAYW_access',
   refreshToken: 'PAYW_refresh',
 }
@@ -12,6 +13,30 @@ export const cookieNames = {
 export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
   const cookies = new Cookies(req, res)
   const accessToken = cookies.get(cookieNames.accessToken)
+
+  async function setTokens({
+    accessToken,
+    refreshToken,
+  }: {
+    accessToken?: string
+    refreshToken?: string
+  }) {
+    if (accessToken) {
+      cookies.set(cookieNames.accessToken, accessToken, {
+        path: '/',
+        httpOnly: true,
+        expires: addMinutes(new Date(), 10),
+      })
+    }
+
+    if (refreshToken) {
+      cookies.set(cookieNames.refreshToken, refreshToken, {
+        path: '/',
+        httpOnly: true,
+        expires: new Date('2999-12-31'),
+      })
+    }
+  }
 
   async function verifyAccess() {
     if (!accessToken) {
@@ -36,5 +61,5 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
     }
   }
 
-  return { verifyAccess }
+  return { setTokens, verifyAccess }
 }

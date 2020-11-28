@@ -10,7 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^0.21.0",
-    "cookies": "^0.8.0"
+    "cookies": "^0.8.0",
+    "date-fns": "^2.16.1"
   },
   "devDependencies": {
     "@types/cookies": "^0.7.5"
