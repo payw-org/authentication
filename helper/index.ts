@@ -10,9 +10,12 @@ const cookieNames = {
   refreshToken: 'PAYW_refresh',
 }
 
+const createHeaderAuth = (token: string) => `Bearer ${token}`
+
 export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
   const cookies = new Cookies(req, res)
   const accessToken = cookies.get(cookieNames.accessToken)
+  const refreshToken = cookies.get(cookieNames.refreshToken)
 
   async function setTokens({
     accessToken,
@@ -38,7 +41,7 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
     }
   }
 
-  async function verifyAccess() {
+  async function verify(): Promise<boolean> {
     if (!accessToken) {
       return false
     }
@@ -47,7 +50,7 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
       const res = await axios(`${host}/verify`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: createHeaderAuth(accessToken),
         },
       })
 
@@ -55,11 +58,32 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
     } catch (e) {
       const error = e as AxiosError
 
-      if (error.response?.status === 401) {
-        return error.response.data
+      const data = error.response?.data
+
+      if (data?.expired) {
+        if (!refreshToken) {
+          return false
+        }
+
+        try {
+          const res = await axios(`${host}/refresh`, {
+            method: 'POST',
+            headers: {
+              Authorization: createHeaderAuth(refreshToken),
+            },
+          })
+
+          if (res.data?.accessToken) {
+            cookies.set(cookieNames.accessToken, res.data.accessToken)
+          }
+        } catch {
+          return false
+        }
       }
     }
+
+    return false
   }
 
-  return { setTokens, verifyAccess }
+  return { setTokens, verify }
 }
