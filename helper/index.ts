@@ -13,8 +13,9 @@ const cookieNames = {
 const createHeaderAuth = (token: string) => `Bearer ${token}`
 
 export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
+  let loop = 0
   const cookies = new Cookies(req, res)
-  const accessToken = cookies.get(cookieNames.accessToken)
+  let accessToken = cookies.get(cookieNames.accessToken)
   const refreshToken = cookies.get(cookieNames.refreshToken)
 
   async function setTokens({
@@ -74,7 +75,16 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
           })
 
           if (res.data?.accessToken) {
-            cookies.set(cookieNames.accessToken, res.data.accessToken)
+            accessToken = res.data.accessToken as string
+            cookies.set(cookieNames.accessToken, accessToken)
+
+            loop += 1
+
+            if (loop >= 10) {
+              throw Error('PAYW Auth - Failed to verify')
+            }
+
+            return await verify()
           }
         } catch {
           return false
