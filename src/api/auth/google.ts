@@ -54,7 +54,7 @@ function makeGoogleAuthRouter({
 
         const existingUser = await prisma.user.findUnique({
           where: {
-            userID: profile.emails[0].value,
+            username: profile.emails[0].value,
           },
         })
 
@@ -76,41 +76,68 @@ function makeGoogleAuthRouter({
             })
           }
 
+          await prisma.registration.upsert({
+            create: {
+              userID: existingUser.id,
+              service: serviceName,
+            },
+            update: {},
+            where: {
+              userID_service: {
+                userID: existingUser.id,
+                service: serviceName,
+              },
+            },
+          })
+
           done(null, {
             refreshToken: refreshToken,
             accessToken: signAccessToken({ userID: existingUser.id }),
           })
-          return
-        }
+        } else {
+          const createdUser = await prisma.user.create({
+            data: {
+              username: profile.emails[0].value,
+              registeredAt: currentTime(),
+            },
+          })
 
-        const createdUser = await prisma.user.create({
-          data: {
-            userID: profile.emails[0].value,
-            registeredAt: currentTime(),
-          },
-        })
+          const authData: AuthData = {
+            userID: createdUser.id,
+          }
 
-        const authData: AuthData = {
-          userID: createdUser.id,
-        }
+          const refreshToken = signRefreshToken(authData)
 
-        const refreshToken = signRefreshToken(authData)
+          await prisma.user.update({
+            data: {
+              refreshToken,
+            },
+            where: {
+              id: authData.userID,
+            },
+          })
 
-        await prisma.user.update({
-          data: {
+          await prisma.registration.upsert({
+            create: {
+              userID: authData.userID,
+              service: serviceName,
+            },
+            update: {},
+            where: {
+              userID_service: {
+                userID: authData.userID,
+                service: serviceName,
+              },
+            },
+          })
+
+          const payload = {
             refreshToken,
-          },
-          where: {
-            id: authData.userID,
-          },
-        })
+            accessToken: signAccessToken(authData),
+          }
 
-        const payload = {
-          refreshToken,
-          accessToken: signAccessToken(authData),
+          done(null, payload)
         }
-
-        done(null, payload)
       }
     )
   )
