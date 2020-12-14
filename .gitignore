@@ -2,7 +2,6 @@ node_modules
 **/env/index.ts
 .env
 *.db
-migrations
 .DS_Store
 dist
 .cache
