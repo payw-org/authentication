@@ -52,7 +52,7 @@ function makeGoogleAuthRouter({
 
         console.log(profile.emails[0])
 
-        const existingUser = await prisma.user.findOne({
+        const existingUser = await prisma.user.findUnique({
           where: {
             userID: profile.emails[0].value,
           },

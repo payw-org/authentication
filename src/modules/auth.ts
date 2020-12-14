@@ -58,7 +58,7 @@ export const verifyToken = (
 
       // Check DB and compare the refresh token
       if (authData?.userID && type === 'refresh') {
-        const user = await prisma.user.findOne({
+        const user = await prisma.user.findUnique({
           where: {
             id: authData.userID,
           },
