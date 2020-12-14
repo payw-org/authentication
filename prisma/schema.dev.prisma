@@ -4,12 +4,19 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL_PROD")
+  url      = env("DATABASE_URL_DEV")
 }
 
 model User {
   id           Int     @id @default(autoincrement())
-  userID       String  @unique
+  username     String  @unique
   registeredAt String
   refreshToken String?
+}
+
+model Registration {
+  userID  Int
+  service String
+
+  @@id([userID, service])
 }
