@@ -1,7 +1,15 @@
 import axios, { AxiosError } from 'axios'
 import Cookies from 'cookies'
-import { addMinutes } from 'date-fns'
 import { IncomingMessage, ServerResponse } from 'http'
+
+type AuthData = {
+  userID: number
+}
+
+type DecodedAuthData = AuthData & {
+  iat: number
+  exp: number
+}
 
 const devHost = 'http://localhost:3020'
 const paywAuthHost = 'https://auth.payw.org'
@@ -15,8 +23,13 @@ const cookieNames = {
 
 const createHeaderAuth = (token: string) => `Bearer ${token}`
 
+const cookiesSetOption: Cookies.SetOption = {
+  path: '/',
+  httpOnly: true,
+  expires: new Date('2038-01-10'),
+}
+
 export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
-  let loop = 0
   const cookies = new Cookies(req, res)
   let accessToken = cookies.get(cookieNames.accessToken)
   const refreshToken = cookies.get(cookieNames.refreshToken)
@@ -29,23 +42,18 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
     refreshToken?: string
   }) {
     if (accessToken) {
-      cookies.set(cookieNames.accessToken, accessToken, {
-        path: '/',
-        httpOnly: true,
-        expires: addMinutes(new Date(), 10),
-      })
+      cookies.set(cookieNames.accessToken, accessToken, cookiesSetOption)
     }
 
     if (refreshToken) {
-      cookies.set(cookieNames.refreshToken, refreshToken, {
-        path: '/',
-        httpOnly: true,
-        expires: new Date('2999-12-31'),
-      })
+      cookies.set(cookieNames.refreshToken, refreshToken, cookiesSetOption)
     }
   }
 
-  async function verify(prod = false): Promise<boolean> {
+  async function verify(
+    prod = false,
+    loopCount = 0
+  ): Promise<DecodedAuthData | false> {
     if (!accessToken) {
       return false
     }
@@ -81,15 +89,16 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
 
           if (res.data?.accessToken) {
             accessToken = res.data.accessToken as string
-            cookies.set(cookieNames.accessToken, accessToken)
 
-            loop += 1
+            cookies.set(cookieNames.accessToken, accessToken, cookiesSetOption)
 
-            if (loop >= 10) {
+            loopCount += 1
+
+            if (loopCount >= 10) {
               throw Error('PAYW Auth - Failed to verify')
             }
 
-            return await verify()
+            return await verify(prod, loopCount)
           }
         } catch {
           return false
@@ -100,5 +109,9 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
     return false
   }
 
-  return { setTokens, verify }
+  function redirect(location: string) {
+    res.writeHead(302, { Location: location }).end()
+  }
+
+  return { setTokens, verify, redirect }
 }
