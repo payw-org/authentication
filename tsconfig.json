@@ -20,5 +20,5 @@
     "plugins": [{ "transform": "@zerollup/ts-transform-paths" }]
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "src/client"]
+  "exclude": ["node_modules", "src/pages"]
 }
