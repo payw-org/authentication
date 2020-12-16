@@ -5,7 +5,9 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "build": "rimraf dist/* && tsc && cp package.json dist/package.json"
+    "build": "rimraf dist/* && tsc && cp package.json dist/package.json",
+    "pub": "npm publish --access public",
+    "deploy": "npm run build && npm run --prefix dist pub"
   },
   "author": "PAYW",
   "license": "MIT",
