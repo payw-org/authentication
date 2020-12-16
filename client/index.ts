@@ -3,7 +3,10 @@ import Cookies from 'cookies'
 import { addMinutes } from 'date-fns'
 import { IncomingMessage, ServerResponse } from 'http'
 
-const host = 'https://auth.payw.org'
+const devHost = 'http://localhost:3020'
+const paywAuthHost = 'https://auth.payw.org'
+const defaultHost =
+  process.env.NODE_ENV === 'development' ? devHost : paywAuthHost
 
 const cookieNames = {
   accessToken: 'PAYW_access',
@@ -42,10 +45,12 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
     }
   }
 
-  async function verify(): Promise<boolean> {
+  async function verify(prod = false): Promise<boolean> {
     if (!accessToken) {
       return false
     }
+
+    const host = prod ? paywAuthHost : defaultHost
 
     try {
       const res = await axios(`${host}/verify`, {
