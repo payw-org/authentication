@@ -22,7 +22,7 @@ PAYW Auth uses [JSON Web Tokens](https://jwt.io/) to authenticate user identity.
 
 # Auth API
 
-- [Sign Up / Login](#Sign-Up-/-Login)
+- [Sign Up / Login](#Sign-Up--Login)
 - [Verify Access Token](#Verify-Access-Token)
 - [Refresh Access Token](#Refresh-Access-Token)
 - [Revoke Refresh Token](#Revoke-Refresh-Token)
