@@ -6,7 +6,6 @@ import {
 } from '@/modules/auth'
 import { createHandler } from '@/modules/express-helper'
 import { makeBody, makeHeader } from '@/modules/express-validator'
-import type { Request, Response } from 'express'
 import express from 'express'
 
 const body = makeBody<VerificationRequestHeaderAuthorization>()
@@ -21,50 +20,57 @@ type VerificationRequestHeaderAuthorization = {
   refreshToken: string
 }
 
-verificationRouter.post(`/verify`, async (req: Request, res: Response) => {
-  const accessToken = res.locals.token as string
+verificationRouter.post(
+  `/verify`,
+  createHandler(async ({ res }) => {
+    const accessToken = res.locals.token as string
 
-  const [accessTokenErr, authData] = await verifyToken(accessToken, 'access')
+    const [accessTokenErr, authData] = await verifyToken(accessToken, 'access')
 
-  console.log(accessTokenErr)
+    console.log(accessTokenErr)
 
-  console.log(authData)
+    console.log(authData)
 
-  if (accessTokenErr === null) {
-    res.json(authData)
-    return
-  }
+    if (accessTokenErr === null) {
+      res.json(authData)
+      return
+    }
 
-  if (accessTokenErr.name !== 'TokenExpiredError') {
-    res.sendStatus(401)
-    return
-  }
+    if (accessTokenErr.name !== 'TokenExpiredError') {
+      res.sendStatus(401)
+      return
+    }
 
-  // Access token expired
+    // Access token expired
 
-  res.status(401).send({ expired: true })
-})
-
-verificationRouter.post(`/refresh`, async (req: Request, res: Response) => {
-  const refreshToken = res.locals.token as string
-
-  const [refreshTokenErr, authData] = await verifyToken(refreshToken, 'refresh')
-
-  if (refreshTokenErr || !authData) {
-    res.sendStatus(401)
-    return
-  }
-
-  const newAccessToken = signAccessToken({
-    userID: authData.userID,
+    res.status(401).send({ expired: true })
   })
+)
 
-  console.log(`newAccessToken: ${newAccessToken}`)
+verificationRouter.post(
+  `/refresh`,
+  createHandler(async ({ res }) => {
+    const refreshToken = res.locals.token as string
 
-  res.json({
-    accessToken: newAccessToken,
+    const [refreshTokenErr, authData] = await verifyToken(
+      refreshToken,
+      'refresh'
+    )
+
+    if (refreshTokenErr || !authData) {
+      res.sendStatus(401)
+      return
+    }
+
+    const newAccessToken = signAccessToken({
+      userID: authData.userID,
+    })
+
+    console.log(`newAccessToken: ${newAccessToken}`)
+
+    res.json({ accessToken: newAccessToken })
   })
-})
+)
 
 verificationRouter.post(
   `/revoke`,
