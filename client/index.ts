@@ -3,6 +3,7 @@ import Cookies from 'cookies'
 import { IncomingMessage, ServerResponse } from 'http'
 
 const availableServices = ['saying.today'] as const
+type AvailableService = typeof availableServices[number]
 
 type AuthData = {
   userID: number
@@ -18,7 +19,7 @@ const paywAuthHost = 'https://auth.payw.org'
 const defaultHost =
   process.env.NODE_ENV === 'development' ? devHost : paywAuthHost
 
-export function getLoginURL(service: typeof availableServices[number]) {
+function getLoginURL(service: AvailableService) {
   return `${paywAuthHost}/?service=${service}`
 }
 
@@ -35,18 +36,21 @@ const cookiesSetOption: Cookies.SetOption = {
   expires: new Date('2038-01-10'),
 }
 
-export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
+const PAYWAuth = (req: IncomingMessage, res: ServerResponse) => {
   const cookies = new Cookies(req, res)
   let accessToken = cookies.get(cookieNames.accessToken)
   const refreshToken = cookies.get(cookieNames.refreshToken)
 
-  async function setTokens({
+  /**
+   * Store tokens in httpOnly cookie
+   */
+  const storeTokens = async ({
     accessToken,
     refreshToken,
   }: {
     accessToken?: string
     refreshToken?: string
-  }) {
+  }): Promise<void> => {
     if (accessToken) {
       cookies.set(cookieNames.accessToken, accessToken, cookiesSetOption)
     }
@@ -56,10 +60,18 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
     }
   }
 
-  async function verify(
+  /**
+   * @deprecated Use `storeTokens` instead.
+   */
+  const setTokens = storeTokens
+
+  /**
+   * Verify the tokens
+   */
+  const verify = async (
     prod = false,
     loopCount = 0
-  ): Promise<DecodedAuthData | false> {
+  ): Promise<DecodedAuthData | false> => {
     if (!accessToken) {
       return false
     }
@@ -115,9 +127,21 @@ export function PAYWAuth(req: IncomingMessage, res: ServerResponse) {
     return false
   }
 
-  function redirect(location: string) {
+  /**
+   * Redirect to the location
+   */
+  const redirect = (location: string): void => {
     res.writeHead(302, { Location: location }).end()
   }
 
-  return { setTokens, verify, redirect }
+  type PAYWAuthInstance = {
+    storeTokens: typeof storeTokens
+    setTokens: typeof storeTokens
+    verify: typeof verify
+    redirect: typeof redirect
+  }
+
+  return { storeTokens, setTokens, verify, redirect } as PAYWAuthInstance
 }
+
+export { getLoginURL, PAYWAuth }
