@@ -1,6 +1,6 @@
 {
   "name": "@payw/auth",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "PAYW Authentication",
   "main": "index.js",
   "types": "index.d.ts",
