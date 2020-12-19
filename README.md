@@ -162,10 +162,52 @@ paywAuth.verify().then((result) => {
 
 ## PAYW Auth Client API
 
-### `PAYWAuth(req: IncomingMessage, res: ServerResponse)`
+### PAYWAuth(req: IncomingMessage, res: ServerResponse): PAYWAuthInstance
 
-### `PAYWAuthInstance.setTokens({ accessToken?: string, refreshToken?: string })`
+```ts
+import { PAYWAuth } from '@payw/auth'
 
-### `PAYWAuthInstance.verify()`
+const paywAuth = PAYWAuth(req, res)
+```
 
-### `PAYWAuthInstance.redirect(location: string)`
+### ~~PAYWAuthInstance.setTokens({ accessToken?: string, refreshToken?: string }): void`~~
+
+> Deprecated. Use `storeTokens` instead.
+
+### PAYWAuthInstance.storeTokens({ accessToken?: string, refreshToken?: string }): void
+
+Store access token and refresh token in httpOnly cookies.
+
+```ts
+paywAuth.storeTokens({ accessToken: '', refreshToken: '' })
+```
+
+### PAYWAuthInstance.verify(): Promise<DecodedAuthData | false>
+
+Verify the tokens through the PAYW Authentication server.
+
+```ts
+paywAuth.verify()
+```
+
+### PAYWAuthInstance.redirect(location: string): void
+
+Redirect to the given location.
+
+```ts
+paywAuth.redirect('/')
+```
+
+### getLoginURL(service: AvailableService): string
+
+Get the sign up/login URL of a service.
+
+```ts
+import { PAYWAuth, getLoginURL } from '@payw/auth'
+
+const paywAuth = PAYWAuth(req, res)
+
+paywAuth.redirect(getLoginURL('saying.today'))
+```
+
+> It's available in the browsers.
