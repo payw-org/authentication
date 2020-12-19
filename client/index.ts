@@ -2,6 +2,8 @@ import axios, { AxiosError } from 'axios'
 import Cookies from 'cookies'
 import { IncomingMessage, ServerResponse } from 'http'
 
+const availableServices = ['saying.today'] as const
+
 type AuthData = {
   userID: number
 }
@@ -16,7 +18,11 @@ const paywAuthHost = 'https://auth.payw.org'
 const defaultHost =
   process.env.NODE_ENV === 'development' ? devHost : paywAuthHost
 
-const cookieNames = {
+export function getLoginURL(service: typeof availableServices[number]) {
+  return `${paywAuthHost}/?service=${service}`
+}
+
+export const cookieNames = {
   accessToken: 'PAYW_access',
   refreshToken: 'PAYW_refresh',
 }
