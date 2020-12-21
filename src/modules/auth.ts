@@ -6,11 +6,6 @@ export type AuthData = {
   userID: number
 }
 
-export type DecodedAuthData = AuthData & {
-  iat: number
-  exp: number
-}
-
 const prisma = new PrismaClient()
 
 export const signAccessToken = (authData: AuthData) =>
@@ -46,7 +41,7 @@ export type JWTError = JsonWebTokenError & {
 export const verifyToken = (
   token: string | null | undefined,
   type: 'access' | 'refresh'
-): Promise<[Error | null, DecodedAuthData | undefined]> => {
+): Promise<[Error | null, AuthData | undefined]> => {
   return new Promise((resolve) => {
     const secret =
       type === 'access'
@@ -54,27 +49,34 @@ export const verifyToken = (
         : env.auth.jwt.refreshTokenSecret
 
     jwt.verify(token ?? '', secret, async (err, decoded) => {
-      const authData = decoded as DecodedAuthData | undefined
+      if (decoded) {
+        const authData = decoded as AuthData & { iat?: number; exp?: number }
 
-      // Check DB and compare the refresh token
-      if (authData?.userID && type === 'refresh') {
-        const user = await prisma.user.findUnique({
-          where: {
-            id: authData.userID,
-          },
-        })
+        delete authData.iat
+        delete authData.exp
 
-        if (user?.refreshToken !== token) {
-          const err = new Error('Revoked Refresh Token')
+        // Check DB and compare the refresh token
+        if (authData?.userID && type === 'refresh') {
+          const user = await prisma.user.findUnique({
+            where: {
+              id: authData.userID,
+            },
+          })
 
-          err.name = 'RevokedRefreshToken'
+          if (user?.refreshToken !== token) {
+            const err = new Error('Revoked Refresh Token')
 
-          resolve([err, undefined])
-          return
+            err.name = 'RevokedRefreshToken'
+
+            resolve([err, undefined])
+            return
+          }
         }
-      }
 
-      resolve([err, decoded as DecodedAuthData | undefined])
+        resolve([err, authData as AuthData])
+      } else {
+        resolve([err, decoded as undefined])
+      }
     })
   })
 }

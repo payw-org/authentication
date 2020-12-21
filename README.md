@@ -182,7 +182,7 @@ Store access token and refresh token in httpOnly cookies.
 paywAuth.storeTokens({ accessToken: '', refreshToken: '' })
 ```
 
-### PAYWAuthInstance.verify(): Promise<DecodedAuthData | false>
+### PAYWAuthInstance.verify(): Promise<AuthData | false>
 
 Verify the tokens through the PAYW Authentication server.
 

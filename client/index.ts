@@ -71,7 +71,7 @@ const PAYWAuth = (req: IncomingMessage, res: ServerResponse) => {
   const verify = async (
     prod = false,
     loopCount = 0
-  ): Promise<DecodedAuthData | false> => {
+  ): Promise<AuthData | false> => {
     if (!accessToken) {
       return false
     }
