@@ -6,7 +6,6 @@ import cors from 'cors'
 import express from 'express'
 import { apiRouter } from './api'
 import { corsAllowedList } from './constants'
-import { prisma } from './modules/prisma'
 
 const dev = process.env.NODE_ENV === 'development'
 
@@ -26,7 +25,6 @@ const server = app.listen(port, () => {
   console.log(`${chalk.yellow('server')} - listening on port ${port}`)
 })
 
-prisma.$on('beforeExit' as never, () => {
-  prisma.$disconnect()
-  server.close()
+process.on('SIGTERM', () => {
+  process.exit()
 })
