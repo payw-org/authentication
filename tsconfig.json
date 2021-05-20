@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -20,5 +20,5 @@
     "plugins": [{ "transform": "@zerollup/ts-transform-paths" }]
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "src/pages"]
+  "exclude": ["node_modules", "src/public"]
 }
