@@ -1,3 +1,4 @@
+import { cookieNames } from 'client'
 import type { NextFunction, Request, Response } from 'express'
 
 export const examineToken = async (
@@ -5,6 +6,20 @@ export const examineToken = async (
   res: Response,
   next: NextFunction
 ) => {
+  // If token exists in cookie
+  const accessToken = req.cookies[cookieNames.accessToken]
+  const refreshToken = req.cookies[cookieNames.refreshToken]
+
+  if (req.url === '/refresh' && refreshToken) {
+    req.token = refreshToken
+    return next()
+  } else if (accessToken) {
+    req.token = accessToken
+    return next()
+  }
+
+  // If token does not exist in cookie,
+  // parse the authorization header
   const authorization = req.headers.authorization
 
   if (!authorization || typeof authorization !== 'string') {
@@ -22,7 +37,7 @@ export const examineToken = async (
     return
   }
 
-  res.locals.token = token
+  req.token = token
 
   next()
 }

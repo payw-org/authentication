@@ -7,7 +7,7 @@ import {
 } from '@/modules/auth'
 import { isDev } from '@/modules/is-dev'
 import { prisma } from '@/modules/prisma'
-import { currentTime } from '@/utils/time'
+import { dbNow } from '@/modules/time'
 import express from 'express'
 import passport from 'passport'
 import * as GoogleStrategy from 'passport-google-oauth'
@@ -29,6 +29,7 @@ function makeGoogleAuthRouter({
 }) {
   const redirectPath = `/google/redirect/${serviceName}`
   const redirectURL = `${host}${redirectPath}`
+  const now = dbNow()
 
   passport.use(
     `google-${serviceName}`,
@@ -54,7 +55,7 @@ function makeGoogleAuthRouter({
 
         const existingUser = await prisma.user.findUnique({
           where: {
-            username: profile.emails[0].value,
+            email: profile.emails[0].value,
           },
         })
 
@@ -78,13 +79,14 @@ function makeGoogleAuthRouter({
 
           await prisma.registration.upsert({
             create: {
-              userID: existingUser.id,
+              userId: existingUser.id,
               service: serviceName,
+              registeredAt: now,
             },
             update: {},
             where: {
-              userID_service: {
-                userID: existingUser.id,
+              userId_service: {
+                userId: existingUser.id,
                 service: serviceName,
               },
             },
@@ -97,8 +99,8 @@ function makeGoogleAuthRouter({
         } else {
           const createdUser = await prisma.user.create({
             data: {
-              username: profile.emails[0].value,
-              registeredAt: currentTime(),
+              email: profile.emails[0].value,
+              registeredAt: now,
             },
           })
 
@@ -119,13 +121,14 @@ function makeGoogleAuthRouter({
 
           await prisma.registration.upsert({
             create: {
-              userID: authData.userID,
+              userId: authData.userID,
               service: serviceName,
+              registeredAt: dbNow(),
             },
             update: {},
             where: {
-              userID_service: {
-                userID: authData.userID,
+              userId_service: {
+                userId: authData.userID,
                 service: serviceName,
               },
             },

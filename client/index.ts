@@ -9,18 +9,16 @@ type AuthData = {
   userID: number
 }
 
-type DecodedAuthData = AuthData & {
-  iat: number
-  exp: number
-}
-
 const devHost = 'http://localhost:3020'
 const paywAuthHost = 'https://auth.payw.org'
-const defaultHost =
-  process.env.NODE_ENV === 'development' ? devHost : paywAuthHost
 
-function getLoginURL(service: AvailableService) {
-  return `${paywAuthHost}/?service=${service}`
+function whichHost(dev = false) {
+  return dev ? devHost : paywAuthHost
+}
+
+function getLoginURL(service: AvailableService, dev = false) {
+  const host = whichHost(dev)
+  return `${host}/?service=${service}`
 }
 
 export const cookieNames = {
@@ -34,6 +32,15 @@ const cookiesSetOption: Cookies.SetOption = {
   path: '/',
   httpOnly: true,
   expires: new Date('2038-01-10'),
+}
+
+const refreshSetOption: Cookies.SetOption = {
+  httpOnly: true,
+  expires: new Date('2038-01-10'),
+}
+
+const clearOption: Cookies.SetOption = {
+  expires: new Date('1997-01-01'),
 }
 
 const PAYWAuth = (req: IncomingMessage, res: ServerResponse) => {
@@ -56,7 +63,14 @@ const PAYWAuth = (req: IncomingMessage, res: ServerResponse) => {
     }
 
     if (refreshToken) {
-      cookies.set(cookieNames.refreshToken, refreshToken, cookiesSetOption)
+      cookies.set(cookieNames.refreshToken, refreshToken, {
+        ...refreshSetOption,
+        path: '/payw-auth/refresh',
+      })
+      cookies.set(cookieNames.refreshToken, refreshToken, {
+        ...refreshSetOption,
+        path: '/payw-auth/revoke',
+      })
     }
   }
 
@@ -65,18 +79,38 @@ const PAYWAuth = (req: IncomingMessage, res: ServerResponse) => {
    */
   const setTokens = storeTokens
 
+  const clearTokens = () => {
+    cookies.set(cookieNames.accessToken, '', {
+      ...clearOption,
+      path: '/',
+    })
+    cookies.set(cookieNames.refreshToken, '', {
+      ...clearOption,
+      path: '/payw-auth/refresh',
+    })
+    cookies.set(cookieNames.refreshToken, '', {
+      ...clearOption,
+      path: '/payw-auth/revoke',
+    })
+  }
+
   /**
    * Verify the tokens
    */
-  const verify = async (
-    prod = false,
-    loopCount = 0
-  ): Promise<AuthData | false> => {
+  const verify = async (options?: {
+    dev?: boolean
+    loopCount?: number
+  }): Promise<AuthData | false> => {
+    const dev = options?.dev ?? false
+    let loopCount = options?.loopCount ?? 0
+
+    console.log(`accessToken: ${accessToken}`)
+
     if (!accessToken) {
       return false
     }
 
-    const host = prod ? paywAuthHost : defaultHost
+    const host = whichHost(dev)
 
     try {
       const res = await axios(`${host}/verify`, {
@@ -93,6 +127,8 @@ const PAYWAuth = (req: IncomingMessage, res: ServerResponse) => {
       const data = error.response?.data
 
       if (data?.expired) {
+        console.log(`refreshToken: ${refreshToken}`)
+
         if (!refreshToken) {
           return false
         }
@@ -116,9 +152,14 @@ const PAYWAuth = (req: IncomingMessage, res: ServerResponse) => {
               throw Error('PAYW Auth - Failed to verify')
             }
 
-            return await verify(prod, loopCount)
+            return await verify({
+              dev,
+              loopCount,
+            })
           }
         } catch {
+          clearTokens()
+
           return false
         }
       }
@@ -136,12 +177,24 @@ const PAYWAuth = (req: IncomingMessage, res: ServerResponse) => {
 
   type PAYWAuthInstance = {
     storeTokens: typeof storeTokens
+    /**
+     * @deprecated Use `storeTokens` instead.
+     */
     setTokens: typeof storeTokens
+    clearTokens: typeof clearTokens
     verify: typeof verify
     redirect: typeof redirect
   }
 
-  return { storeTokens, setTokens, verify, redirect } as PAYWAuthInstance
+  const paywAuthInstance: PAYWAuthInstance = {
+    storeTokens,
+    setTokens,
+    clearTokens,
+    verify,
+    redirect,
+  }
+
+  return paywAuthInstance
 }
 
 export { getLoginURL, PAYWAuth }

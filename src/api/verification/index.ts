@@ -22,14 +22,12 @@ type VerificationRequestHeaderAuthorization = {
 
 verificationRouter.post(
   `/verify`,
-  createHandler(async ({ res }) => {
-    const accessToken = res.locals.token as string
+  createHandler(async ({ req, res }) => {
+    const accessToken = req.token
+
+    console.log(`accessToken: ${accessToken}`)
 
     const [accessTokenErr, authData] = await verifyToken(accessToken, 'access')
-
-    console.log(accessTokenErr)
-
-    console.log(authData)
 
     if (accessTokenErr === null) {
       res.json(authData)
@@ -43,14 +41,20 @@ verificationRouter.post(
 
     // Access token expired
 
+    console.log('expired')
+
     res.status(401).send({ expired: true })
   })
 )
 
 verificationRouter.post(
   `/refresh`,
-  createHandler(async ({ res }) => {
-    const refreshToken = res.locals.token as string
+  createHandler(async ({ req, res }) => {
+    const refreshToken = req.token
+
+    console.log(`refreshToken: ${refreshToken}`)
+
+    console.log('try to refresh')
 
     const [refreshTokenErr, authData] = await verifyToken(
       refreshToken,
@@ -74,8 +78,8 @@ verificationRouter.post(
 
 verificationRouter.post(
   `/revoke`,
-  createHandler(async ({ res }) => {
-    const refreshToken = res.locals.token as string
+  createHandler(async ({ req, res }) => {
+    const refreshToken = req.token
     const [tokenErr, authData] = await verifyToken(refreshToken, 'refresh')
 
     if (tokenErr || !authData) {

@@ -3,12 +3,24 @@ generator client {
 }
 
 datasource db {
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
-  userID       String  @unique
-  registeredAt String
-  refreshToken String?
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  email        String   @unique @default("") @db.VarChar(254)
+  registeredAt DateTime @map("registered_at") @db.DateTime(0)
+  refreshToken String?  @map("refresh_token") @db.VarChar(500)
+
+  @@map("user")
+}
+
+model Registration {
+  userId       Int      @map("user_id") @db.UnsignedInt
+  service      String   @db.VarChar(100)
+  registeredAt DateTime @map("registered_at") @db.DateTime(0)
+
+  @@id([userId, service])
+  @@map("registration")
 }

@@ -1,7 +1,7 @@
 import { env } from '@/env'
 import appRoot from 'app-root-path'
-import bodyParser from 'body-parser'
 import chalk from 'chalk'
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
 import { apiRouter } from './api'
@@ -11,11 +11,16 @@ const dev = process.env.NODE_ENV === 'development'
 
 const app = express()
 
-const corsHandler = dev ? cors() : cors({ origin: corsAllowedList })
+app.use(cookieParser())
+
+const corsHandler = dev
+  ? cors({ credentials: true, origin: ['http://localhost:3000'] })
+  : cors({ credentials: true, origin: corsAllowedList })
 
 app.use(corsHandler)
 
-app.use(bodyParser.json())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 app.use(express.static(appRoot.resolve('public')))
 app.use(apiRouter)
 
